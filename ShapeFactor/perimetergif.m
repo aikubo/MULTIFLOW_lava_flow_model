@@ -1,11 +1,11 @@
-close all
-[J, NewVent]=orientFlow(Flow1984, VentLocation, 1,0);
-FlowMap=J;
+%close all
+
+VentLocation=[1005,1];
 FlowMap=im2bw(FlowMap);
 FlowMap=imfill(FlowMap, 'holes');
 FlowMap=bwlabel(FlowMap,4);
 
-Flow=(L==1);
+Flow=(FlowMap==1);
 Largest = 1; 
 LargestValue = 1; 
 % make sure that the largest flow is selected 
@@ -22,18 +22,18 @@ end
 FlowMap(FlowMap~=Largest) = 0; 
 FlowMap(FlowMap~=0) = 1;
 
-
-TUnwind=curvature(Flow1984, VentLocation, 1,1);
+FlowMap=shape;
+TUnwind=curvature(FlowMap, VentLocation, 1,1);
 
 figure;
 subplot(1,2,1)
 xlim([0,max(TUnwind(:,1))])
 ylim([0 90])
 subplot(1,2,2)
-imshow(~J)
+imshow(FlowMap)
 axis on 
 hold on
-plot(NewVent(1), NewVent(2), 'r+', 'MarkerSize', 20, 'LineWidth', 3);
+plot(VentLocation(1), VentLocation(2), 'r+', 'MarkerSize', 20, 'LineWidth', 3);
 
 
 % subplot(1,2,1)

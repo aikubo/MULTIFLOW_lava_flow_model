@@ -18,23 +18,23 @@ if nargin<4
     crop=0;
 end 
 
-if length(VentLocation(:,1))>1
-        VentX=ceil(sum(VentLocation(:,1))/length(VentLocation(:,1)));
-        VentY=ceil(sum(VentLocation(:,2))/length(VentLocation(:,1)));
-        
-        VentLocation=[VentX, VentY];
-end
+% if length(VentLocation)>1
+%         VentX=ceil(sum(VentLocation(:,1))/length(VentLocation));
+%         VentY=ceil(sum(VentLocation(:,2))/length(VentLocation));     
+%         VentLocation=[VentX, VentY];
+% end
+
 VentX=VentLocation(1);
 VentY=VentLocation(2);
 
-
+    FlowMap=double(FlowMap);
 %% ------------------ CENTROID ---------------------------------------------------
     [Ny,Nx]=size(FlowMap);
     
     [y, x] = ndgrid(1:Ny, 1:Nx);
     Centroid = mean([x(logical(FlowMap)), y(logical(FlowMap))]);
     Center = mean([x(:), y(:)]);
-
+% 
 %     figure;
 %     subplot(1,4,1)
 %     imshow(FlowMap)
@@ -42,22 +42,24 @@ VentY=VentLocation(2);
 %     plot(Centroid(1), Centroid(2), 'g+', 'MarkerSize', 30, 'LineWidth', 2) 
 %     plot(Center(1), Center(2), 'b*', 'MarkerSize', 30, 'LineWidth', 2)
 %     plot(VentX, VentY, 'r+', 'MarkerSize', 30, 'LineWidth', 2) 
-    
+%     
+    % markvent 
+    FlowMap(VentY, VentX)=10;
 %% make the centroid the center 
     [row,col]=size(FlowMap);
     Delta=ceil(abs(Center-Centroid));
 
     addrow=zeros(2*ceil(Delta(2)), col+2*ceil(Delta(1)));
     addcol=zeros(row, 2*ceil(Delta(1)));
-
+    expandedFlowMap=FlowMap;
+    
     if Center(1)<Centroid(1)
         % add Delta(1) columns to right
-        expandedFlowMap=[FlowMap addcol];
+        expandedFlowMap=[expandedFlowMap addcol];
 
     elseif Center(1)>Centroid(1)
         % add Delta(1) columns to left
-        expandedFlowMap=[addcol, FlowMap];
-        VentX= VentLocation(1)+2*ceil(Delta(1));
+        expandedFlowMap=[addcol,expandedFlowMap];
     end 
 
     if Center(2)<Centroid(2)
@@ -67,9 +69,10 @@ VentY=VentLocation(2);
     elseif Center(2)>Centroid(2)
         % add Delta(2) rows to top
         expandedFlowMap=[addrow; expandedFlowMap];
-        VentX= VentLocation(2)+2*ceil(Delta(2));
     end
     
+    
+    [VentY,VentX]=find(expandedFlowMap==10);
     VentLocation=[VentX, VentY];
     [Ny_N,Nx_N]=size(expandedFlowMap);
     [y, x] = ndgrid(1:Ny_N, 1:Nx_N);
@@ -84,7 +87,7 @@ VentY=VentLocation(2);
 %     plot(VentX, VentY, 'r+', 'MarkerSize', 30, 'LineWidth', 2) 
 %     
     % rotate so the flow 
-    FlowDir= [ VentLocation(1)-Centroid(1), VentLocation(2)-Centroid(2)];
+    FlowDir= [ VentLocation(1)-Centroid_N(1), VentLocation(2)-Centroid_N(2)];
     FlowAngle= -1*(atand(FlowDir(1)/FlowDir(2))); 
 
     % markvent 
@@ -93,8 +96,6 @@ VentY=VentLocation(2);
     % rotate
     J=imrotate(expandedFlowMap, FlowAngle);
     
-    
-
     [Ny_N,Nx_N]=size(J);
     [y, x] = ndgrid(1:Ny_N, 1:Nx_N);
     Centroid_N = mean([x(logical(J)), y(logical(J))]);
@@ -148,7 +149,7 @@ VentY=VentLocation(2);
 %         imshow(J)
 %         hold on
 %         plot(NewVent(1), NewVent(2), 'r+', 'MarkerSize', 30, 'LineWidth', 2)
-        
+%         
     end    
 
     if crop

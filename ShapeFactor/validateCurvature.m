@@ -1,37 +1,21 @@
-function unwindFlow=curvature(FlowMap,VentLocation, orient,plots)
+%load circle 
+clear 
 
-% transform binary image of the flow into the perimeter coordinates 
-% written by A Kubo 3/2020
+% load circle.mat
+% 
+% radius=487.37;
+% perimeter=2*(3.14)*radius;
+% VentLocation=[840, 960];
 
-%%   Inputs
-%   FlowMap - binary image with 1s where the flow covers
-%   VentLocation - [x y] location of the vent
-% Optional 
-%   orient - if true, orient so that the flow direction is parallel to 
-%            the y axis 
+load square.mat
+VentLocation= [1005,1];
+s=1.0025e+03;
+perimeter=4*s;
 
-%
-%%   Outputs 
-%   Unwind  -  3 columns with rows equal to the  perimeter of the flow 
-%           [P_distance  dist theta]
-%           P_distance - perimeter distance from the vent 
-%           theta   - angle from the vent relative to centerline
-%           dist    - distance from the vent 
+orient=1; 
+plots=1;
 
-%load Kilauea_shape.mat
-%VentLocation = [526 737];
-
-%% Checks 
-if nargin<3 
-     orient=0;
-end 
-if nargin<4 
-    plots=0;
-end
-%% orient 
-if orient 
-    [FlowMap, VentLocation]=orientFlow(FlowMap, VentLocation, 1, 0);
-end
+FlowMap=shape;
 FlowMap=im2bw(FlowMap);
 FlowMap=imfill(FlowMap, 'holes');
 
@@ -114,11 +98,9 @@ for i=2:perim
     
     straight=abs(VentLocation(2)-Yloc(closest));
     thetav=acosd(straight/vdist);
-    
     dy=(unwindFlow(i-1,6) - Yloc(closest));
     dx=(unwindFlow(i-1,5) - Xloc(closest));
     thetaLocal=atan2d(dy,dx);
-    
    
     unwindFlow(i,1)=Pdist;  % Distance Along perimeter
     unwindFlow(i,2)=thetav; % Angle from Vent 
@@ -159,7 +141,11 @@ if plots
     for i=1:length(frac)
         dist=abs(unwindFlow(:,1)-frac(i).*Perimeter);
         ind=find(dist==min(dist));
-        p(i,:)=[unwindFlow(ind,:)];
+        if length(ind)>1 
+            ind=ind(1);
+        end 
+        
+        p(i,:)=unwindFlow(ind,:);
     end
     
     
@@ -167,7 +153,7 @@ if plots
     data=plot(unwindFlow(:,1), unwindFlow(:,3), 'k.');
     hold on 
     xlim([0 max(unwindFlow(:,1))])
-    ylim([0 90])
+    %ylim([0 90])
     plot(p(1,1), p(1,3), 'g.', 'MarkerSize', 20, 'LineWidth', 3)
     plot(p(2,1), p(2,3), 'g*', 'MarkerSize', 20, 'LineWidth', 3)
     plot(p(3,1), p(3,3), 'g+', 'MarkerSize', 20, 'LineWidth', 3)
@@ -194,3 +180,26 @@ if plots
     t.FontSize=18;
 end 
 
+
+if orient 
+    [FlowMap, VentLocation]=orientFlow(FlowMap, VentLocation, 1, 0);
+end
+FlowMap=im2bw(FlowMap);
+FlowMap=imfill(FlowMap, 'holes');
+
+FlowMap=bwlabel(FlowMap,4);
+Largest = 1; 
+LargestValue = 1; 
+% make sure that the largest flow is selected 
+for jj = 1:max(FlowMap(:))
+    FlowMapTest = FlowMap;
+    FlowMapTest(FlowMapTest~=jj) = 0;
+    FlowMapTest(FlowMapTest==jj) = 1;
+    if sum(FlowMapTest(:)) > LargestValue
+        Largest = jj;
+        LargestValue = sum(FlowMapTest(:));
+    end
+end
+% exclude everything else    
+FlowMap(FlowMap~=Largest) = 0; 
+FlowMap(FlowMap~=0) = 1;
