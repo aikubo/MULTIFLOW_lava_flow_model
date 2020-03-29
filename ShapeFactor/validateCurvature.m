@@ -1,16 +1,16 @@
 %load circle 
 clear 
 
-% load circle.mat
-% 
-% radius=487.37;
-% perimeter=2*(3.14)*radius;
-% VentLocation=[840, 960];
+load circle.mat
 
-load square.mat
-VentLocation= [1005,1];
-s=1.0025e+03;
-perimeter=4*s;
+radius=487.37;
+P_true=2*(pi)*radius;
+VentLocation=[840, 960];
+
+%load square.mat
+%VentLocation= [1005,1];
+% s=sqrt(1005^2+1005^2);
+% P_true=4*s;
 
 orient=1; 
 plots=1;
@@ -35,31 +35,35 @@ end
 % exclude everything else    
 FlowMap(FlowMap~=Largest) = 0; 
 FlowMap(FlowMap~=0) = 1;
-%% Find perimeter 
-[Ny, Nx] = size(FlowMap);
-EDGE = zeros(Ny, Nx);
-    % LOOP THROUGH NY AND NX
-    for ik = 2:Ny-1
-        for jk = 2:Nx-1
-            if FlowMap(ik,jk) == 1
-                window = FlowMap(ik-1:ik+1,jk-1:jk+1);
-            
-                if sum(window(:)) < 9
-                    EDGE(ik, jk) = 1;
-                end
-
-            end
-        end
-    end
-clear window ik jk 
-%% Make grid 
-[row,col]=size(FlowMap);
-[x,y]=meshgrid(1:col,1:row);
-
-%% X&Y locations of the edge
-Xloc=x(logical(EDGE));
-Yloc=y(logical(EDGE));
+% % Find perimeter 
+% [Ny, Nx] = size(FlowMap);
+% EDGE = zeros(Ny, Nx);
+%     LOOP THROUGH NY AND NX
+%     for ik = 2:Ny-1
+%         for jk = 2:Nx-1
+%             if FlowMap(ik,jk) == 1
+%                 window = FlowMap(ik-1:ik+1,jk-1:jk+1);
+%             
+%                 if sum(window(:)) < 9
+%                     EDGE(ik, jk) = 1;
+%                 end
+% 
+%             end
+%         end
+%     end
+% clear window ik jk 
+% % Make grid 
+% [row,col]=size(FlowMap);
+% [x,y]=meshgrid(1:col,1:row);
+% 
+% % X&Y locations of the edge
+% Xloc=x(logical(EDGE));
+% Yloc=y(logical(EDGE));
 %% 
+EDGES=bwboundaries(FlowMap);
+Xloc=EDGES{1}(:,1);
+Yloc=EDGES{1}(:,2);
+
 perim=length(Xloc);
 
 unwindFlow=zeros(perim, 6);
@@ -82,13 +86,13 @@ for i=2:perim
             mintheta=find(theta_step==min(theta_step));
             
             closest=close(mintheta);
-            
+           
             if length(mintheta)>1
                 closest=close(mintheta(1));
             end
-        
+            
     else
-        closest=min(close);        
+        closest=close; 
     end
     
     %Find perimeter distance
@@ -122,84 +126,94 @@ for i=2:perim
         break
     end
     
-    if diststep>100
-        break
-    end
+    %if diststep>100
+    %    break
+    %end
 end
 
-unwindFlow=unwindFlow(unwindFlow(:,1)>0,:);
-l=length(unwindFlow(:,1));
+% unwindFlow=unwindFlow(unwindFlow(:,1)>0,:);
+% l=length(unwindFlow(:,1));
+% 
+% if plots 
+%     
+%     frac=[0.25, 0.50, 0.75];
+    PCalc=max(unwindFlow(:,1));
+%     p=zeros(length(frac), 6);
+%     maxdist=find(unwindFlow(:,4)==max(unwindFlow(:,4))); 
+%     maxtheta=find(unwindFlow(:,2)==max(unwindFlow(:,2))); 
+%     
+%     for i=1:length(frac)
+%         dist=abs(unwindFlow(:,1)-frac(i).*PCalc);
+%         ind=find(dist==min(dist));
+%         if length(ind)>1 
+%             ind=ind(1);
+%         end 
+%         
+%         p(i,:)=unwindFlow(ind,:);
+%     end
+%     
+%     
+%     figure; subplot(1,2,1); 
+%     data=plot(unwindFlow(:,1), unwindFlow(:,3), 'k.');
+%     hold on 
+%     xlim([0 max(unwindFlow(:,1))])
+%     %ylim([0 90])
+%     plot(p(1,1), p(1,3), 'g.', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(p(2,1), p(2,3), 'g*', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(p(3,1), p(3,3), 'g+', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(unwindFlow(maxdist,1), unwindFlow(maxdist,3), 'b+', 'MarkerSize', 20, 'LineWidth', 3);
+%     set(get(get(data,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+%     legend('0.25 Perimeter', '0.5 Perimeter', '0.75 Perimeter', 'Maximum Distance from Vent')
+%     %plot(unwindFlow(maxtheta,1), unwindFlow(maxtheta,2), 'c+', 'MarkerSize', 20, 'LineWidth', 3);
+%     xlabel('Perimeter Distance (from Vent) in pixels')
+%     ylabel('Angle from Vent relative to Flow Direction')
+%     
+%     
+%     subplot(1,2,2)
+%     imshow(FlowMap)
+%     hold on
+%     
+%     plot(p(1,5), p(1,6), 'g.', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(p(2,5), p(2,6), 'g*', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(p(3,5), p(3,6), 'g+', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(unwindFlow(maxdist,5), unwindFlow(maxdist,6), 'b+', 'MarkerSize', 20, 'LineWidth', 3);
+%     %plot(unwindFlow(maxtheta,4), unwindFlow(maxtheta,5), 'c+', 'MarkerSize', 20, 'LineWidth', 3);
+%     plot(VentLocation(1), VentLocation(2), 'r+', 'MarkerSize', 20, 'LineWidth', 3);
+%     t=text(VentLocation(1)+200, VentLocation(2), 'Vent', 'HorizontalAlignment', 'center');
+%     t.Color='red';
+%     t.FontSize=18;
+% end 
+% 
+% 
+% if orient 
+%     [FlowMap, VentLocation]=orientFlow(FlowMap, VentLocation, 1, 0);
+% end
+% FlowMap=im2bw(FlowMap);
+% FlowMap=imfill(FlowMap, 'holes');
+% 
+% FlowMap=bwlabel(FlowMap,4);
+% Largest = 1; 
+% LargestValue = 1; 
+% % make sure that the largest flow is selected 
+% for jj = 1:max(FlowMap(:))
+%     FlowMapTest = FlowMap;
+%     FlowMapTest(FlowMapTest~=jj) = 0;
+%     FlowMapTest(FlowMapTest==jj) = 1;
+%     if sum(FlowMapTest(:)) > LargestValue
+%         Largest = jj;
+%         LargestValue = sum(FlowMapTest(:));
+%     end
+% end
+% % exclude everything else    
+% FlowMap(FlowMap~=Largest) = 0; 
+% FlowMap(FlowMap~=0) = 1;
 
-if plots 
-    
-    frac=[0.25, 0.50, 0.75];
-    Perimeter=max(unwindFlow(:,1));
-    p=zeros(length(frac), 6);
-    maxdist=find(unwindFlow(:,4)==max(unwindFlow(:,4))); 
-    maxtheta=find(unwindFlow(:,2)==max(unwindFlow(:,2))); 
-    
-    for i=1:length(frac)
-        dist=abs(unwindFlow(:,1)-frac(i).*Perimeter);
-        ind=find(dist==min(dist));
-        if length(ind)>1 
-            ind=ind(1);
-        end 
-        
-        p(i,:)=unwindFlow(ind,:);
-    end
-    
-    
-    figure; subplot(1,2,1); 
-    data=plot(unwindFlow(:,1), unwindFlow(:,3), 'k.');
-    hold on 
-    xlim([0 max(unwindFlow(:,1))])
-    %ylim([0 90])
-    plot(p(1,1), p(1,3), 'g.', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(p(2,1), p(2,3), 'g*', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(p(3,1), p(3,3), 'g+', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(unwindFlow(maxdist,1), unwindFlow(maxdist,3), 'b+', 'MarkerSize', 20, 'LineWidth', 3);
-    set(get(get(data,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
-    legend('0.25 Perimeter', '0.5 Perimeter', '0.75 Perimeter', 'Maximum Distance from Vent')
-    %plot(unwindFlow(maxtheta,1), unwindFlow(maxtheta,2), 'c+', 'MarkerSize', 20, 'LineWidth', 3);
-    xlabel('Perimeter Distance (from Vent) in pixels')
-    ylabel('Angle from Vent relative to Flow Direction')
-    
-    
-    subplot(1,2,2)
-    imshow(FlowMap)
-    hold on
-    
-    plot(p(1,5), p(1,6), 'g.', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(p(2,5), p(2,6), 'g*', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(p(3,5), p(3,6), 'g+', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(unwindFlow(maxdist,5), unwindFlow(maxdist,6), 'b+', 'MarkerSize', 20, 'LineWidth', 3);
-    %plot(unwindFlow(maxtheta,4), unwindFlow(maxtheta,5), 'c+', 'MarkerSize', 20, 'LineWidth', 3);
-    plot(VentLocation(1), VentLocation(2), 'r+', 'MarkerSize', 20, 'LineWidth', 3);
-    t=text(VentLocation(1)+200, VentLocation(2), 'Vent', 'HorizontalAlignment', 'center');
-    t.Color='red';
-    t.FontSize=18;
-end 
 
 
-if orient 
-    [FlowMap, VentLocation]=orientFlow(FlowMap, VentLocation, 1, 0);
+mismatch=(PCalc/P_true)-1;
+if PCalc>P_true 
+    fprintf("Over estimated perimeter by factor of %f\n ", mismatch )
+    
+elseif P_true>PCalc
+    fprintf("Under estimated perimeter by factor of %f\n", mismatch )
 end
-FlowMap=im2bw(FlowMap);
-FlowMap=imfill(FlowMap, 'holes');
-
-FlowMap=bwlabel(FlowMap,4);
-Largest = 1; 
-LargestValue = 1; 
-% make sure that the largest flow is selected 
-for jj = 1:max(FlowMap(:))
-    FlowMapTest = FlowMap;
-    FlowMapTest(FlowMapTest~=jj) = 0;
-    FlowMapTest(FlowMapTest==jj) = 1;
-    if sum(FlowMapTest(:)) > LargestValue
-        Largest = jj;
-        LargestValue = sum(FlowMapTest(:));
-    end
-end
-% exclude everything else    
-FlowMap(FlowMap~=Largest) = 0; 
-FlowMap(FlowMap~=0) = 1;

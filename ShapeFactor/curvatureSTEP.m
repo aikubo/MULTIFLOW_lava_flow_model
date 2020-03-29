@@ -1,4 +1,4 @@
-function unwindFlow=curvature(FlowMap,VentLocation, orient,plots)
+function unwindFlow=curvature(FlowMap,VentLocation, step, orient,plots)
 
 % transform binary image of the flow into the perimeter coordinates 
 % written by A Kubo 3/2020
@@ -21,11 +21,15 @@ function unwindFlow=curvature(FlowMap,VentLocation, orient,plots)
 %load Kilauea_shape.mat
 %VentLocation = [526 737];
 
-%% Checks 
+%% Checks
 if nargin<3 
+     step=1;
+end
+
+if nargin<4 
      orient=0;
 end 
-if nargin<4 
+if nargin<5 
     plots=0;
 end
 %% orient 
@@ -52,12 +56,30 @@ end
 FlowMap(FlowMap~=Largest) = 0; 
 FlowMap(FlowMap~=0) = 1;
 %% Find perimeter 
-%% 
-EDGES=bwboundaries(FlowMap);
-Xloc=EDGES{1}(:,1);
-Yloc=EDGES{1}(:,2);
+[Ny, Nx] = size(FlowMap);
+EDGE = zeros(Ny, Nx);
+    % LOOP THROUGH NY AND NX
+    for ik = 2:Ny-1
+        for jk = 2:Nx-1
+            if FlowMap(ik,jk) == 1
+                window = FlowMap(ik-1:ik+1,jk-1:jk+1);
+            
+                if sum(window(:)) < 9
+                    EDGE(ik, jk) = 1;
+                end
 
-%% For loop
+            end
+        end
+    end
+clear window ik jk 
+%% Make grid 
+[row,col]=size(FlowMap);
+[x,y]=meshgrid(1:col,1:row);
+
+%% X&Y locations of the edge
+Xloc=x(logical(EDGE));
+Yloc=y(logical(EDGE));
+%% 
 perim=length(Xloc);
 
 unwindFlow=zeros(perim, 6);
@@ -66,14 +88,17 @@ oldplace=VentLocation;
 
 for i=2:perim
     % find distance from point to all points
-    distances=sqrt( (oldplace(1)-Xloc).^2 + (oldplace(2)-Yloc).^2);
-    diststep=min(distances);
+    % subtract step distance 
+    % distances will be ~0 where at step away from oldplace
+    distances=abs(sqrt( (oldplace(1)-Xloc).^2 + (oldplace(2)-Yloc).^2)-step);
+    diststep=min(distances); % might not always be perfectly zero
     % find the closest point to the previous step
     close=find(distances==diststep);
     
     % make sure there is only one closest spot
     if length(close)>1
             % choose the smallest angle from the previous step
+            % 
             vdist=sqrt((VentLocation(1)-Xloc(close)).^2 + (VentLocation(2)-Yloc(close)).^2);
             straight=abs(VentLocation(2)-Yloc(close));
             theta_step= abs(acosd(straight./vdist)-unwindFlow(i-1,2));
@@ -84,12 +109,14 @@ for i=2:perim
             if length(mintheta)>1
                 closest=close(mintheta(1));
             end
-
+        
+    else
+        closest=min(close);        
     end
     
     %Find perimeter distance
 
-    Pdist=diststep+unwindFlow(i-1,1);
+    Pdist=(diststep)+unwindFlow(i-1,1);
     vdist=sqrt((VentLocation(1)-Xloc(closest)).^2 + (VentLocation(2)-Yloc(closest)).^2);
     
     straight=abs(VentLocation(2)-Yloc(closest));
