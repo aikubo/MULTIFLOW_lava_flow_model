@@ -51,8 +51,7 @@ end
 % exclude everything else    
 FlowMap(FlowMap~=Largest) = 0; 
 FlowMap(FlowMap~=0) = 1;
-%% Find perimeter 
-%% 
+%% Find perimeter  
 EDGES=bwboundaries(FlowMap);
 Xloc=EDGES{1}(:,1);
 Yloc=EDGES{1}(:,2);
@@ -139,6 +138,10 @@ if plots
     for i=1:length(frac)
         dist=abs(unwindFlow(:,1)-frac(i).*Perimeter);
         ind=find(dist==min(dist));
+        if length(ind)>1
+            ind=ind(1);
+        end 
+        
         p(i,:)=[unwindFlow(ind,:)];
     end
     

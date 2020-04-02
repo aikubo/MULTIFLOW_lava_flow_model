@@ -49,7 +49,7 @@ for i=1:100:length(TUnwind(:,1))
     plot(TUnwind(i,1), TUnwind(i,2), 'r.', 'MarkerSize', 25)
 
     subplot(1,2,2)
-    plot(TUnwind(i,4), TUnwind(i,5), 'r.', 'MarkerSize', 25)
+    plot(TUnwind(i,5), TUnwind(i,6), 'r.', 'MarkerSize', 25)
     pause(0.1)
 end
 
