@@ -1,4 +1,12 @@
-function unwindFlow=curvature(FlowMap,VentLocation, step, orient,plots)
+Pstep=100;
+
+load circle.mat
+
+radius=487.37;
+P_true=2*(pi)*radius;
+VentLocation=[840, 960];
+FlowMap=shape;
+%function unwindFlow=curvature(FlowMap,VentLocation, step, orient,plots)
 
 % transform binary image of the flow into the perimeter coordinates 
 % written by A Kubo 3/2020
@@ -22,20 +30,28 @@ function unwindFlow=curvature(FlowMap,VentLocation, step, orient,plots)
 %VentLocation = [526 737];
 
 %% Checks
-if nargin<3 
-     step=1;
-end
+% if nargin<3 
+%      step=1;
+% end
+% 
+% if nargin<4 
+%      orient=0;
+% end 
+% if nargin<5 
+%     plots=0;
+% end
+% %% orient 
+% if orient 
+%     [FlowMap, VentLocation]=orientFlow(FlowMap, VentLocation, 1, 0);
+% end
 
-if nargin<4 
-     orient=0;
-end 
-if nargin<5 
-    plots=0;
-end
-%% orient 
+orient=1;
+plots=0;
+
 if orient 
     [FlowMap, VentLocation]=orientFlow(FlowMap, VentLocation, 1, 0);
 end
+
 FlowMap=im2bw(FlowMap);
 FlowMap=imfill(FlowMap, 'holes');
 
@@ -56,29 +72,9 @@ end
 FlowMap(FlowMap~=Largest) = 0; 
 FlowMap(FlowMap~=0) = 1;
 %% Find perimeter 
-[Ny, Nx] = size(FlowMap);
-EDGE = zeros(Ny, Nx);
-    % LOOP THROUGH NY AND NX
-    for ik = 2:Ny-1
-        for jk = 2:Nx-1
-            if FlowMap(ik,jk) == 1
-                window = FlowMap(ik-1:ik+1,jk-1:jk+1);
-            
-                if sum(window(:)) < 9
-                    EDGE(ik, jk) = 1;
-                end
-
-            end
-        end
-    end
-clear window ik jk 
-%% Make grid 
-[row,col]=size(FlowMap);
-[x,y]=meshgrid(1:col,1:row);
-
-%% X&Y locations of the edge
-Xloc=x(logical(EDGE));
-Yloc=y(logical(EDGE));
+EDGES=bwboundaries(FlowMap);
+Xloc=EDGES{1}(:,1);
+Yloc=EDGES{1}(:,2);
 %% 
 perim=length(Xloc);
 
@@ -90,7 +86,7 @@ for i=2:perim
     % find distance from point to all points
     % subtract step distance 
     % distances will be ~0 where at step away from oldplace
-    distances=abs(sqrt( (oldplace(1)-Xloc).^2 + (oldplace(2)-Yloc).^2)-step);
+    distances=abs(sqrt((oldplace(1)-Xloc).^2 + (oldplace(2)-Yloc).^2)-Pstep);
     diststep=min(distances); % might not always be perfectly zero
     % find the closest point to the previous step
     close=find(distances==diststep);
@@ -201,3 +197,22 @@ if plots
     t.FontSize=18;
 end 
 
+figure;
+subplot(1,2,1)
+xlim([0,max(unwindFlow(:,1))])
+ylim([0 90])
+subplot(1,2,2)
+imshow(FlowMap)
+axis on 
+hold on
+plot(VentLocation(1), VentLocation(2), 'r+', 'MarkerSize', 20, 'LineWidth', 3);
+
+for i=2:length(unwindFlow) 
+     subplot(1,2,1)
+    hold on 
+    plot(unwindFlow(i,1), unwindFlow(i,2), 'r.', 'MarkerSize', 25)
+
+    subplot(1,2,2)
+    plot(unwindFlow((i-1):i,5), unwindFlow((i-1):i,6), 'r.', 'MarkerSize', 25)
+    pause(0.1)
+end
