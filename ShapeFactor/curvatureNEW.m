@@ -1,12 +1,4 @@
-%Pstep=100;
-
-load circle.mat
-
-radius=487.37;
-P_true=2*(pi)*radius;
-VentLocation=[840, 960];
-FlowMap=shape;
-%function unwindFlow=curvatureNEW(FlowMap,VentLocation, step, orient,plots)
+function unwindFlow=curvatureNEW(FlowMap,VentLocation, orient,plots)
 
 % transform binary image of the flow into the perimeter coordinates 
 % written by A Kubo 3/2020
@@ -33,20 +25,17 @@ FlowMap=shape;
 % if nargin<3 
 %      step=1;
 % end
-% 
-% if nargin<4 
-%      orient=0;
-% end 
-% if nargin<5 
-%     plots=0;
-% end
-% %% orient 
-% if orient 
-%     [FlowMap, VentLocation]=orientFlow(FlowMap, VentLocation, 1, 0);
-% end
 
-orient=1;
-plots=0;
+if nargin<3 
+     orient=0;
+end 
+if nargin<4 
+    plots=0;
+end
+%% orient 
+if orient 
+    [FlowMap, VentLocation]=orientFlow(FlowMap, VentLocation, 1, 0);
+end
 
 %% Preprocessing flowMap
 if orient 
@@ -118,6 +107,8 @@ for i=2:boundary
     thetaLocal=atan2d(dy,dx);
     unwindFlow(i,4)=thetaLocal;
 end 
+
+
 
 % figure; 
 % imshow(FlowMap)
@@ -201,86 +192,86 @@ end
 % unwindFlow=unwindFlow(unwindFlow(:,1)>0,:);
 % l=length(unwindFlow(:,1));
 
-if plots 
-    
-    frac=[0.25, 0.50, 0.75];
-    Perimeter=max(unwindFlow(:,1));
-    p=zeros(length(frac), 6);
-    maxdist=find(unwindFlow(:,4)==max(unwindFlow(:,4))); 
-    maxtheta=find(unwindFlow(:,2)==max(unwindFlow(:,2))); 
-    
-    for i=1:length(frac)
-        dist=abs(unwindFlow(:,1)-frac(i).*Perimeter);
-        ind=find(dist==min(dist));
-        p(i,:)=[unwindFlow(ind,:)];
-    end
-    
-    
-    figure; subplot(1,2,1); 
-    data=plot(unwindFlow(:,1), unwindFlow(:,3), 'k.');
-    hold on 
-    xlim([0 max(unwindFlow(:,1))])
-    ylim([0 90])
-    plot(p(1,1), p(1,3), 'g.', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(p(2,1), p(2,3), 'g*', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(p(3,1), p(3,3), 'g+', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(unwindFlow(maxdist,1), unwindFlow(maxdist,3), 'b+', 'MarkerSize', 20, 'LineWidth', 3);
-    set(get(get(data,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
-    legend('0.25 Perimeter', '0.5 Perimeter', '0.75 Perimeter', 'Maximum Distance from Vent')
-    %plot(unwindFlow(maxtheta,1), unwindFlow(maxtheta,2), 'c+', 'MarkerSize', 20, 'LineWidth', 3);
-    xlabel('Perimeter Distance (from Vent) in pixels')
-    ylabel('Angle from Vent relative to Flow Direction')
-    
-    
-    subplot(1,2,2)
-    imshow(FlowMap)
-    hold on
-    
-    plot(p(1,5), p(1,6), 'g.', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(p(2,5), p(2,6), 'g*', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(p(3,5), p(3,6), 'g+', 'MarkerSize', 20, 'LineWidth', 3)
-    plot(unwindFlow(maxdist,5), unwindFlow(maxdist,6), 'b+', 'MarkerSize', 20, 'LineWidth', 3);
-    %plot(unwindFlow(maxtheta,4), unwindFlow(maxtheta,5), 'c+', 'MarkerSize', 20, 'LineWidth', 3);
-    plot(VentLocation(1), VentLocation(2), 'r+', 'MarkerSize', 20, 'LineWidth', 3);
-    t=text(VentLocation(1)+200, VentLocation(2), 'Vent', 'HorizontalAlignment', 'center');
-    t.Color='red';
-    t.FontSize=18;
-end 
+% if plots 
+%     
+%     frac=[0.25, 0.50, 0.75];
+%     Perimeter=max(unwindFlow(:,1));
+%     p=zeros(length(frac), 6);
+%     maxdist=find(unwindFlow(:,4)==max(unwindFlow(:,4))); 
+%     %maxtheta=find(unwindFlow(:,2)==max(unwindFlow(:,2))); 
+%     
+%     for i=1:length(frac)
+%         dist=abs(unwindFlow(:,1)-frac(i).*Perimeter);
+%         ind=find(dist==min(dist));
+%         p(i,:)=[unwindFlow(ind,:)];
+%     end
+%     
+%     
+%     figure; subplot(1,2,1); 
+%     data=plot(unwindFlow(:,1), unwindFlow(:,3), 'k.');
+%     hold on 
+%     xlim([0 max(unwindFlow(:,1))])
+%     ylim([0 90])
+%     plot(p(1,1), p(1,3), 'g.', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(p(2,1), p(2,3), 'g*', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(p(3,1), p(3,3), 'g+', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(unwindFlow(maxdist,1), unwindFlow(maxdist,3), 'b+', 'MarkerSize', 20, 'LineWidth', 3);
+%     set(get(get(data,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+%     legend('0.25 Perimeter', '0.5 Perimeter', '0.75 Perimeter', 'Maximum Distance from Vent')
+%     %plot(unwindFlow(maxtheta,1), unwindFlow(maxtheta,2), 'c+', 'MarkerSize', 20, 'LineWidth', 3);
+%     xlabel('Perimeter Distance (from Vent) in pixels')
+%     ylabel('Angle from Vent relative to Flow Direction')
+%     
+%     
+%     subplot(1,2,2)
+%     imshow(FlowMap)
+%     hold on
+%     
+%     plot(p(1,5), p(1,6), 'g.', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(p(2,5), p(2,6), 'g*', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(p(3,5), p(3,6), 'g+', 'MarkerSize', 20, 'LineWidth', 3)
+%     plot(unwindFlow(maxdist,5), unwindFlow(maxdist,6), 'b+', 'MarkerSize', 20, 'LineWidth', 3);
+%     %plot(unwindFlow(maxtheta,4), unwindFlow(maxtheta,5), 'c+', 'MarkerSize', 20, 'LineWidth', 3);
+%     plot(VentLocation(1), VentLocation(2), 'r+', 'MarkerSize', 20, 'LineWidth', 3);
+%     t=text(VentLocation(1)+200, VentLocation(2), 'Vent', 'HorizontalAlignment', 'center');
+%     t.Color='red';
+%     t.FontSize=18;
+% end 
 
-figure;
-subplot(1,3,1)
-xlim([0,max(unwindFlow(:,1))])
-ylim([0, 1.1*max(unwindFlow(:,3))])
-
-subplot(1,3,2)
-xlim([0,max(unwindFlow(:,1))])
-ylim([-360 360])
-
-subplot(1,3,3)
-imshow(FlowMap)
-axis on 
-hold on
-plot(VentLocation(1), VentLocation(2), 'r+', 'MarkerSize', 20, 'LineWidth', 3);
-
-for i=2:100:length(unwindFlow) 
-     subplot(1,3,1)
-    hold on 
-    plot(unwindFlow(i,1), unwindFlow(i,3), 'r.', 'MarkerSize', 25)
-    
-    subplot(1,3,2)
-    hold on
-    plot(unwindFlow(i,1), unwindFlow(i,2), 'r.', 'MarkerSize', 25)
-    
-    subplot(1,3,3)
-    plot(unwindFlow((i-1):i,5), unwindFlow((i-1):i,6), 'r.', 'MarkerSize', 25)
-    pause(0.1)
-end
-
-subplot(1,3,1)
-xlabel("Along Perimeter Distance (Pixels)")
-ylabel("Distance from the Vent (Pixels)")
-
-subplot(1,3,2)
-xlabel("Along Perimeter Distance (Pixels)")
-ylabel("Angle between points (degrees)")
+% figure;
+% subplot(1,3,1)
+% xlim([0,max(unwindFlow(:,1))])
+% ylim([0, 1.1*max(unwindFlow(:,3))])
+% 
+% subplot(1,3,2)
+% xlim([0,max(unwindFlow(:,1))])
+% ylim([-360 360])
+% 
+% subplot(1,3,3)
+% imshow(FlowMap)
+% axis on 
+% hold on
+% plot(VentLocation(1), VentLocation(2), 'r+', 'MarkerSize', 20, 'LineWidth', 3);
+% 
+% for i=2:100:length(unwindFlow) 
+%      subplot(1,3,1)
+%     hold on 
+%     plot(unwindFlow(i,1), unwindFlow(i,3), 'r.', 'MarkerSize', 25)
+%     
+%     subplot(1,3,2)
+%     hold on
+%     plot(unwindFlow(i,1), unwindFlow(i,2), 'r.', 'MarkerSize', 25)
+%     
+%     subplot(1,3,3)
+%     plot(unwindFlow((i-1):i,5), unwindFlow((i-1):i,6), 'r.', 'MarkerSize', 25)
+%     pause(0.1)
+% end
+% 
+% subplot(1,3,1)
+% xlabel("Along Perimeter Distance (Pixels)")
+% ylabel("Distance from the Vent (Pixels)")
+% 
+% subplot(1,3,2)
+% xlabel("Along Perimeter Distance (Pixels)")
+% ylabel("Angle between points (degrees)")
 
