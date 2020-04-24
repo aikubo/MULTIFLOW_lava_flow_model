@@ -1,5 +1,7 @@
 function [Spectral_Slope, intercept] = slopeof(M, dx)
-[Pm, fm, Pv, fv]=fft2D(M, dx, dx);
+pad=0;
+window=0;
+[Pm, fm, Pv, fv]=fft2D(M, dx, dx,pad,window);
 % % Create a binned "1D" power spectrum
 nbin=30;  % number of logarithmically spaced bins
 B = bin(log10(fv),log10(Pv),nbin,0); % bin the log-transformed data. 
