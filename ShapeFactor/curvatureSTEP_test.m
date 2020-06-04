@@ -23,7 +23,7 @@ taulist0=nan(size(slist));
 
 a=3;
 %generate a wavy circule through Frenet-Seret equations
-kappalist0(:) = 1 + a*sin(C/Rad.*slist); % path curvature
+kappalist0(:) = 1 + a*sin(C/Rad.*slist) + 2*a*sin(3*C/Rad.*slist); % path curvature
 taulist0(:)  = 0; % path torsion, assume zero for a plane curve
 
 E0=eye(3); % identity matrix 
@@ -62,6 +62,10 @@ end % s
 %its not quite the equivalent of naive version above, but we know it has
 %constant step size
 
+%now we can calculate curvature
+weight=0.0; %regularization weight
+lwin=10; %moving window defining the spatial resolution of curvature
+[kappalist00,taulist0,ttlist0,nnlist0,bblist0]=frenet_robust(rr,lwin,weight);
 %% RESAMPLE AT NON UNIFORM RATE 
 dx=.01;
 xs=-1.5:dx:1.5;
@@ -126,22 +130,54 @@ nnlist(isnan(nnlist))=0;
 % hold on 
 ds=mean(dlist);
 
-[tt2,d]=resample(ttlist(2,:),cumsum(dlist), 1/ds0);
-[tt3,~]=resample(ttlist(3,:),cumsum(dlist), 1/ds0);
+[tt2,d]=resample(ttlist(2,:),cumsum(dlist), 1/(ds0));
+[tt3,~]=resample(ttlist(3,:),cumsum(dlist), 1/(ds0));
 %plot(d, tt, 'r*')
+tt2=smooth(tt2);
+tt3=smooth(tt3);
 
-
-rr_con=zeros(3,length(tt2));
+rr_con=zeros(3,length(rr));
 rr_con(:,1)= rr_grid(:,1);
-for i=2:length(tt2)
+for i=2:length(rr)
     rr_con(2,i)= rr_con(2,i-1)+(tt2(i)*ds0);
     rr_con(3,i)= rr_con(3,i-1)+(tt3(i)*ds0);
     %rr_con(3,i)= rr_con(3,i-1)+(ttlist(i)*ds);
 end
 
+errorlist=(rr-rr_con).^2;
+
+figure; 
+plot(slist,errorlist)
+% figure ;
+% subplot(1,2,1)
+% plot(d,tt2)
+% hold on 
+% plot(slist(:), ttlist0(2,:))
+% plot(cumsum(dlist), ttlist(2,:))
+% plot(d,smooth(tt2))
+% 
+% subplot(1,2,2)
+% plot(d,tt3)
+% hold on 
+% plot(slist(:), ttlist0(3,:))
+% plot(cumsum(dlist), ttlist(3,:))
+% plot(d,smooth(tt3))
+% legend('Reconstructed', 'True', 'Gridded','Smoothed Recon')
+% addd more derivatives in taylor series??
+% 
+% email more people about lava flow outline data 
+% find more outlines in papers
+% using shape to infer volume?
+%   - where is that best applied? 
+% high res maps of maunoa loa/ kilauea to back out eruptive rates?
+% Sierra Negra?
+% mars/ venus?
+% new maunoa loa map? usgs? Frank Trusdale? 
+
+
 [kappalist_con,~,~,~,~]=frenet_robust(rr_con,lwin,weight);
 kappalist_con(isnan(kappalist_con))=0;
-
+% 
 L = 2*pi*Rad;
 
 k = [0:N/2 (-N/2+1):-1] *2*pi /L;
@@ -159,7 +195,6 @@ k_grid = [0:N_grid/2 (-N_grid/2+1):-1] *2*pi /L;
 N_con=2^nextpow2(length(rr_con));
 kappabar_con=fft(kappalist_con,N_con);
 k_con = [0:N_con/2 (-N_con/2+1):-1] *2*pi /L;
-%just plot one side of FFT
 
 %%
 % nfig=3;
@@ -176,55 +211,16 @@ k_con = [0:N_con/2 (-N_con/2+1):-1] *2*pi /L;
 % subplot(1,nfig,2)
 % hold on 
 % plot(cumsum(dlist), kappalist_grid, 'r')
-% plot(d,kappalist_con, 'b', 'LineWidth',2)
+% plot(slist,kappalist_con, 'b', 'LineWidth',2)
 % plot(slist, kappalist0, 'k', 'LineWidth',2)
 % legend('Gridded', 'Reconstructed', 'True')
 % set(gca,'fontsize',18)
 % subplot(1,nfig,3)
 % hold on 
 % plot(k_grid(1:N_grid/2),abs(kappa_grid(1:N_grid/2)), 'r')
+% plot(k_rr(1:N_rr/2),abs(kappabar0(1:N_rr/2)), '.-k', 'LineWidth',1)
 % plot(k_con(1:N_con/2),abs(kappabar_con(1:N_con/2)),'b', 'LineWidth',2)
-% plot(k_rr(1:N_rr/2),abs(kappabar0(1:N_rr/2)), 'k', 'LineWidth',2)
 % legend('Gridded', 'Reconstructed', 'True')
-% set(gca,'fontsize',18)
-%%
-% subplot(2,2,1), hold on
-% plot(rr(2,:),rr(3,:),'o-')
-% ind=1:N;
-% quiver(rr(2,ind),rr(3,ind), nnlist(2,ind),nnlist(3,ind),'r')
-% quiver(rr(2,ind),rr(3,ind), ttlist(2,ind),ttlist(3,ind),'g')
-% legend('Curve','Outward normal','Tangent')
-% title('Initial Curve')
-% set(gca,'fontsize',18)
-% 
-% subplot(2,2,2) 
-% plot(rr_con(2,:), rr_con(3,:), 'k', 'LineWidth',1)
-% xlim([-1.5 1.5])
-% ylim([-1.5 1.5])
-% title('Reconstructed curve')
-% set(gca,'fontsize',18)
-% subplot(2,2,3), hold on
-% plot(slist,kappalist0,'r-','LineWidth',1) 
-% plot(cumsum(dlist),kappalist,'o-')
-% plot(d,kappalist_con, 'g-','LineWidth',1) 
-% kappa_mean=nanmean(kappalist);
-% kappa_std=nanstd(kappalist);
-% % plot(slist,repmat(kappa_mean,ns,1),'g','LineWidth',2)
-% xlabel('s')
-% ylabel('\kappa')
-% ylim([min(min(kappalist0),kappa_mean-kappa_std)-0.1 max(max(kappalist0),kappa_mean-kappa_std)+0.1])
-% title('curvature \kappa')
-% legend("set \kappa", "calculated \kappa", "reconstructed \kappa")
-% set(gca,'fontsize',18)
-% subplot(2,2,4), hold on
-% plot(k(1:N/2),abs(kappabar0(1:N/2)))
-% plot(k(1:N/2),abs(kappabar(1:N/2)),'o-')
-% plot(k(1:N/2),abs(kappabar_con(1:N/2)),'g-')
-% plot([C C],[0 max(abs(kappabar0(1:N/2)))],'k-','LineWidth',1)
-% xlabel('wavenumber k')
-% ylabel('PSD')
-% title('\kappa Spectrum')
-% legend('Exact \kappa','Approx \kappa', "Reconstructed \kappa", 'Wavelength C')
 % set(gca,'fontsize',18)
 
 %%
@@ -237,7 +233,7 @@ hold on
 for i=1:10:length(rr)
     plot(rr(2,i), rr(3,i), 'k.')
     hold on
-    pause(0.1)
+    %pause(0.1)
 end 
 
 % for i=1:10:length(rr_grid)

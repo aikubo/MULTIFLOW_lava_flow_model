@@ -91,7 +91,7 @@ Yloc=circshift(Yloc, (boundary-vboundary));
 
 %% Calculate angles & distance along perimeter
 
-unwindFlow=zeros(boundary, 6);
+unwindFlow=zeros(boundary, 7);
 unwindFlow(:,5:6)=[Xloc,Yloc];
 unwindFlow(:,3)=Vdist;
 
@@ -104,6 +104,7 @@ for i=2:boundary
     dx=Yloc(i)-Yloc(i-1);
     dist=sqrt( dy^2+ dx^2);
     unwindFlow(i,1)=unwindFlow(i-1,1)+dist;
+    unwindFlow(i,7)=dist;
     thetaLocal=atan2d(dy,dx);
     unwindFlow(i,4)=thetaLocal;
 end 

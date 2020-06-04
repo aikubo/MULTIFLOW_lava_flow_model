@@ -72,12 +72,10 @@ for s=slist(1:end-1)
 end % s
 
 %TRY TOGGLING THIS ON TO SEE EFFECT OF NOISE
-noise_strength = 1e-4;
-rr=rr+noise_strength*randn(size(rr));
+% noise_strength = 1e-3;
+% rr=rr+noise_strength*randn(size(rr));
 
-
-
-plot(rr(2,:),rr(3,:),'o-')
+%plot(rr(2,:),rr(3,:),'o-')
 %its not quite the equivalent of naive version above, but we know it has
 %constant step size
 
